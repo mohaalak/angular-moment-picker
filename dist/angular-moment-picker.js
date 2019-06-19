@@ -91,8 +91,6 @@ exports.toMoment = function (date, format, locale) {
         date = new Date().getTime();
     }
     var momentDate = moment(date, format, locale);
-    console.log(format);
-    console.log("limit", momentDate);
     if (!exports.isValidMoment(momentDate))
         momentDate = undefined;
     return momentDate;
@@ -646,14 +644,14 @@ var Directive = /** @class */ (function () {
                     $scope.view.keydown(e); });
                 $element.on('click touchstart', function () { return focusInput(); });
                 $scope.container.on('mousedown', function (e) { return focusInput(e); });
-                angular.element(_this.$window).on('resize scroll', $scope.view.position);
+                angular.element(_this.$window.document).on('resize scroll', $scope.view.position);
                 // unbind events on destroy
                 $scope.$on('$destroy', function () {
                     $scope.input.off('focus click touchstart blur keydown');
                     $element.off('click touchstart');
                     $scope.container.off('mousedown');
                     $scope.picker.remove();
-                    angular.element(_this.$window).off('resize scroll', $scope.view.position);
+                    angular.element(_this.$window.document).off('resize scroll', $scope.view.position);
                 });
             });
         };
