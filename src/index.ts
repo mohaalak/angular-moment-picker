@@ -1,7 +1,6 @@
 import * as angular from 'angular';
 import Provider from './provider';
 import Directive from './directive';
-
 angular
 	.module('moment-picker', [])
 	.provider('momentPicker', [() => new Provider()])

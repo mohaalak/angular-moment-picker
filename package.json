@@ -30,12 +30,14 @@
   },
   "dependencies": {
     "angular": "^1.3",
-    "moment": "^2.16.0"
+    "moment": "^2.16.0",
+    "moment-jalaali": "^0.7.2"
   },
   "devDependencies": {
     "@types/angular": "^1.5.21",
     "@types/angular-mocks": "^1.5.8",
     "@types/jasmine": "^2.5.38",
+    "@types/moment-jalaali": "^0.7.4",
     "@types/node": "^6.0.52",
     "angular-mocks": "^1.6.1",
     "autoprefixer": "^6.5.4",

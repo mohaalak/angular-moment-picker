@@ -11,18 +11,21 @@ export const isValidMoment = (value: moment.Moment | Value): boolean => {
 export const toValue = (date: moment.Moment | Value, format: string, locale: string): Value => {
 	let momentDate = <moment.Moment>date;
 	if (!isValidMoment(date)) momentDate = toMoment(date, format, locale);
-	return momentToValue(momentDate, format);
+	return momentToValue(momentDate, format, locale);
 };
 
 export const toMoment = (date: moment.Moment | Value, format: string, locale: string): moment.Moment => {
+	if (angular.isUndefined(date)) {
+		date = new Date().getTime();
+	}
 	let momentDate = moment(date, format, locale);
 	if (!isValidMoment(momentDate)) momentDate = undefined;
 	return momentDate;
 };
 
-export const momentToValue = (momentObject: moment.Moment, format: string): Value => {
+export const momentToValue = (momentObject: moment.Moment, format: string, locale: string): Value => {
 	if (!isValidMoment(momentObject)) return undefined;
-	return !format ? momentObject.valueOf() : momentObject.format(format);
+	return !format ? momentObject.valueOf() : momentObject.locale(locale).format(format);
 };
 
 export const valueToMoment = (formattedValue: Value, $scope: IDirectiveScopeInternal): moment.Moment => {
@@ -43,8 +46,9 @@ export const valueToMoment = (formattedValue: Value, $scope: IDirectiveScopeInte
 
 export const setValue = (value: moment.Moment | Value, $scope: IDirectiveScopeInternal, $ctrl: IModelController, $attrs: ng.IAttributes): void => {
 	let modelValue = isValidMoment(value) ? (<moment.Moment>value).clone() : valueToMoment(<Value>value, $scope),
-		viewValue = momentToValue(modelValue, $scope.format);
+		viewValue = momentToValue(modelValue, $scope.format,"en");
 	$scope.model = updateMoment($scope.model, modelValue, $scope);
+	
 	$ctrl.$modelValue = updateMoment($ctrl.$modelValue, modelValue, $scope);
 	if ($attrs['ngModel'] != $attrs['momentPicker']) $scope.value = viewValue;
 	if ($attrs['ngModel']) {

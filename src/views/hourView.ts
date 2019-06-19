@@ -24,12 +24,15 @@ export default class HourView implements IView {
 				selectable = this.$scope.limits.isSelectable(minute, 'minute');
 
 			if (!this.rows[index]) this.rows[index] = [];
+			const year = this.$scope.shamsi ? minute.jYear() : minute.year();
+			const month = this.$scope.shamsi ? minute.jMonth() : minute.month();
+			const date = this.$scope.shamsi ? minute.jDate() : minute.date();
 			this.rows[index].push(<IViewItem>{
 				index: minute.minute(),
 				label: minute.format(minutesFormat),
-				year: minute.year(),
-				month: minute.month(),
-				date: minute.date(),
+				year,
+				month,
+				date,
 				hour: minute.hour(),
 				minute: minute.minute(),
 				class: [
@@ -43,12 +46,20 @@ export default class HourView implements IView {
 		}
 		if (this.$scope.keyboard) this.highlightClosest();
 		// return title
-		return this.$scope.view.moment.clone().startOf('hour').format('lll');
+		if (this.$scope.shamsi) {
+			return this.$scope.view.moment.clone().startOf('hour').format('jMMM jD jYYYY h:mm A');
+		}
+		return this.$scope.view.moment.clone().startOf('hour').format('MMM D YYYY h:mm A');
+			
 	}
 
 	public set(minute: IViewItem): void {
 		if (!minute.selectable) return;
-		this.$scope.view.moment.year(minute.year).month(minute.month).date(minute.date).hour(minute.hour).minute(minute.minute);
+		if (this.$scope.shamsi) {
+			this.$scope.view.moment.jYear(minute.year).jMonth(minute.month).jDate(minute.date).hour(minute.hour).minute(minute.minute);
+		} else  {
+			this.$scope.view.moment.year(minute.year).month(minute.month).date(minute.date).hour(minute.hour).minute(minute.minute);
+		}
 		this.$scope.view.update();
 		this.$scope.view.change('minute');
 	}

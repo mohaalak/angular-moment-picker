@@ -12,6 +12,7 @@ export interface IProviderOptions {
 	validate?: boolean;
 	autoclose?: boolean;
 	setOnSelect?: boolean;
+	shamsi?: boolean,
 	today?: boolean;
 	keyboard?: boolean;
 	showHeader?: boolean;
@@ -48,10 +49,11 @@ export interface IProviderOptions {
 export default class Provider implements angular.IServiceProvider {
 	private settings: IProviderOptions = <IProviderOptions>{
 		locale: 'en',
-		format: 'L LTS',
+		format: 'MM/DD/YYYY h:mm:ss A',
 		minView: 'decade',
 		maxView: 'minute',
 		startView: 'year',
+		shamsi: false,
 		inline: false,
 		validate: true,
 		autoclose: true,

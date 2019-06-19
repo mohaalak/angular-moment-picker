@@ -34,7 +34,7 @@ let extractPluginLoaders = [
 	{ loader: 'postcss-loader', options: { plugins: [ autoprefixer({ browsers: ['> 0%'] }) ] } },
 	'less-loader'
 ];
-
+console.log(Object.keys(pkg.dependencies));
 module.exports = {
 	entry: [
 		'./src/index.ts',
@@ -45,14 +45,16 @@ module.exports = {
 		path: path.join(__dirname, 'dist'),
 		filename: filename + '.js'
 	},
+	devtool: 'source-map',
 	bail: true,
-	externals: Object.keys(pkg.dependencies),
+	externals: {'moment-jalaali': "moment-jalaali", "angular": "angular", "moment": "moment"},
 	resolve: {
 		extensions: ['.ts', '.html', '.less']
 	},
+	target: 'web',
 	module: {
 		rules: [
-			{ test: /\.ts$/, use: ['ts-loader', 'tslint-loader'] },
+			{ test: /\.ts$/, exclude: /tests/, use: ['ts-loader', 'tslint-loader'] },
 			{ test: /\.html$/, use: 'html-loader?minimize=true' },
 			{ test: /\.less$/, exclude: /themes/, use: extractBaseTheme.extract(extractPluginLoaders) },
 			...extractOtherThemes.map(theme => {

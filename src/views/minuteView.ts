@@ -22,12 +22,15 @@ export default class MinuteView implements IView {
 				selectable = this.$scope.limits.isSelectable(second, 'second');
 
 			if (!this.rows[index]) this.rows[index] = [];
+			const year = this.$scope.shamsi ? second.jYear() : second.year();
+			const month = this.$scope.shamsi ? second.jMonth() : second.month();
+			const date = this.$scope.shamsi ? second.jDate() : second.date();
 			this.rows[index].push(<IViewItem>{
 				index: second.second(),
 				label: second.format(this.provider.secondsFormat),
-				year: second.year(),
-				month: second.month(),
-				date: second.date(),
+				year,
+				month,
+				date,
 				hour: second.hour(),
 				minute: second.minute(),
 				second: second.second(),
@@ -42,12 +45,20 @@ export default class MinuteView implements IView {
 		}
 		if (this.$scope.keyboard) this.highlightClosest();
 		// return title
+		if (this.$scope.shamsi) {
+			return this.$scope.view.moment.clone().startOf('minute').format('jMMM jD jYYYY h:mm A');
+		} 
 		return this.$scope.view.moment.clone().startOf('minute').format('lll');
 	}
 
 	public set(second: IViewItem): void {
 		if (!second.selectable) return;
-		this.$scope.view.moment.year(second.year).month(second.month).date(second.date).hour(second.hour).minute(second.minute).second(second.second);
+		if (this.$scope.shamsi) {
+			this.$scope.view.moment.jYear(second.year).jMonth(second.month).jDate(second.date).hour(second.hour).minute(second.minute).second(second.second);
+		} else {
+			this.$scope.view.moment.year(second.year).month(second.month).date(second.date).hour(second.hour).minute(second.minute).second(second.second);
+		}
+		
 		this.$scope.view.update();
 		this.$scope.view.change();
 	}

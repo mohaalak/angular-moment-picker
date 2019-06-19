@@ -16,6 +16,7 @@ export default class Directive implements ng.IDirective {
 	public scope      = {
 		value:       '=?momentPicker',
 		model:       '=?ngModel',
+		shamsi:      '=?',
 		locale:      '@?',
 		format:      '@?',
 		minView:     '@?',
@@ -44,7 +45,7 @@ export default class Directive implements ng.IDirective {
 		private $sce: ng.ISCEService,
 		private $log: ng.ILogService,
 		private $window: ng.IWindowService,
-		private provider: IProviderOptions,
+		private provider: any,
 		private $compile: ng.ICompileService,
 		private $templateCache: ng.ITemplateCacheService) { }
 
@@ -53,7 +54,7 @@ export default class Directive implements ng.IDirective {
 			// one-way binding attributes
 			angular.forEach([
 				'locale', 'format', 'minView', 'maxView', 'startView', 'position', 'inline', 'validate', 'autoclose', 'setOnSelect', 'today',
-				'keyboard', 'showHeader', 'leftArrow', 'rightArrow', 'additions'
+				'keyboard', 'showHeader', 'leftArrow', 'rightArrow', 'additions', 'shamsi'
 			], (attr: string) => {
 				if (!angular.isDefined($scope[attr])) $scope[attr] = this.provider[attr];
 				if (!angular.isDefined($attrs[attr])) $attrs[attr] = $scope[attr];
@@ -64,8 +65,8 @@ export default class Directive implements ng.IDirective {
 
 			// limits
 			$scope.limits = {
-				minDate: toMoment($scope.minDate, $scope.format, $scope.locale),
-				maxDate: toMoment($scope.maxDate, $scope.format, $scope.locale),
+				minDate: toMoment($scope.minDate, $scope.format, "en"),
+				maxDate: toMoment($scope.maxDate, $scope.format, "en"),
 				isAfterOrEqualMin: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => {
 					return !angular.isDefined($scope.limits.minDate) || value.isAfter($scope.limits.minDate, precision) || value.isSame($scope.limits.minDate, precision);
 				},
@@ -107,7 +108,7 @@ export default class Directive implements ng.IDirective {
 							/* formats: M,MM,MMM,MMM,Mo,Q */
 					month:	'[Dd]{1,4}(?![Ddo])|DDDo|[Dd]o|[Ww]{1,2}(?![Wwo])|[Ww]o|[Ee]|L{1,2}(?!T)|l{1,2}',
 							/* formats: D,DD,DDD,DDDD,d,dd,ddd,dddd,DDDo,Do,do,W,WW,w,ww,Wo,wo,E,e,L,LL,l,ll */
-					day:	'[Hh]{1,2}|LTS?',
+					day:	'[Hh]{1,2}|h:mm:ss A?',
 							/* formats: H,HH,h,hh,LT,LTS */
 					hour:	'm{1,2}|[Ll]{3,4}|LT(?!S)',
 							/* formats: m,mm,LLL,LLLL,lll,llll,LT */
@@ -119,12 +120,14 @@ export default class Directive implements ng.IDirective {
 					if (!$scope.format) return;
 
 					let minView, maxView;
+					
 					angular.forEach($scope.views.formats, (formats, view) => {
 						let regexp = new RegExp('(' + formats + ')(?![^\[]*\])', 'g');
 						if (!$scope.format.match(regexp)) return;
 						if (!angular.isDefined(minView)) minView = view;
 						maxView = view;
 					});
+					
 
 					if (!angular.isDefined(minView)) minView = 0;
 					else minView = Math.max(0, $scope.views.all.indexOf(minView));
@@ -151,7 +154,7 @@ export default class Directive implements ng.IDirective {
 				value: undefined,
 				isOpen: false,
 				selected: $scope.startView,
-				update: () => { $scope.view.value = momentToValue($scope.view.moment, $scope.format); },
+				update: () => { $scope.view.value = momentToValue($scope.view.moment, $scope.format, $scope.locale); },
 				toggle: () => { $scope.view.isOpen ? $scope.view.close() : $scope.view.open(); },
 				open: () => {
 					if ($scope.disabled || $scope.view.isOpen || $scope.inline) return;
@@ -340,7 +343,7 @@ export default class Directive implements ng.IDirective {
 			// model <-> view conversion
 			if ($attrs['ngModel']) {
 				$ctrl.$parsers.push((viewValue) => updateMoment($ctrl.$modelValue, valueToMoment(viewValue, $scope), $scope) || true);
-				$ctrl.$formatters.push((modelValue) => momentToValue(modelValue, $scope.format) || '');
+				$ctrl.$formatters.push((modelValue) => momentToValue(modelValue, $scope.format, $scope.locale) || '');
 				$ctrl.$viewChangeListeners.push(() => { if ($attrs['ngModel'] != $attrs['momentPicker']) $scope.value = $ctrl.$viewValue; });
 				$ctrl.$validators.minDate = (value) => $scope.validate || !isValidMoment(value) || $scope.limits.isAfterOrEqualMin(value);
 				$ctrl.$validators.maxDate = (value) => $scope.validate || !isValidMoment(value) || $scope.limits.isBeforeOrEqualMax(value);
@@ -351,7 +354,7 @@ export default class Directive implements ng.IDirective {
 				$scope.$watch('value', (newValue: string, oldValue: string) => {
 					if (newValue !== oldValue) setValue(newValue, $scope, $ctrl, $attrs);
 				});
-			$scope.$watch(() => momentToValue($ctrl.$modelValue, $scope.format), (newViewValue, oldViewValue) => {
+			$scope.$watch(() => momentToValue($ctrl.$modelValue, $scope.format,"en"), (newViewValue, oldViewValue) => {
 				if (newViewValue == oldViewValue) return;
 
 				let newModelValue = valueToMoment(newViewValue, $scope);
@@ -434,7 +437,7 @@ export default class Directive implements ng.IDirective {
 				.on('keydown',     			  (e) => { if ($scope.keyboard) $scope.view.keydown(e); });
 			$element.on('click touchstart', () => focusInput());
 			$scope.container.on('mousedown', (e: JQueryEventObject) => focusInput(e));
-			angular.element(this.$window).on('resize scroll', $scope.view.position);
+			angular.element(this.$window.document).on('resize scroll', $scope.view.position);
 
 			// unbind events on destroy
 			$scope.$on('$destroy', () => {
@@ -442,7 +445,7 @@ export default class Directive implements ng.IDirective {
 				$element.off('click touchstart');
 				$scope.container.off('mousedown');
 				$scope.picker.remove();
-				angular.element(this.$window).off('resize scroll', $scope.view.position);
+				angular.element(this.$window.document).off('resize scroll', $scope.view.position);
 			});
 		});
 	}
